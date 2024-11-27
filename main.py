@@ -37,6 +37,46 @@ class NurikabeSolver:
         if current_white_cells != total_white_cells:
             return False
 
+        # Kontrola, že čísla z pôvodnej mriežky sa zachovali
+        for i in range(self.n):
+            for j in range(self.n):
+                if self.grid[i][j] > 0 and self.grid[i][j] != grid[i][j]:
+                    return False
+
+        # 4. Kontrola: Každý ostrov musí byť súvislý a obsahovať správny počet políčok
+        visited = [[False] * self.n for _ in range(self.n)]
+
+        def dfs(x, y, required_size):
+            """
+            DFS na kontrolu ostrova.
+            """
+            stack = [(x, y)]
+            size = 0
+            contains_number = False
+
+            while stack:
+                cx, cy = stack.pop()
+                if visited[cx][cy]:
+                    continue
+                visited[cx][cy] = True
+                size += 1
+                if self.grid[cx][cy] > 0:
+                    contains_number = True
+                    # Prechádzame susedov
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < self.n and 0 <= ny < self.n and not visited[nx][ny]:
+                        if grid[nx][ny] >= 0:  # Len biele políčka a čísla
+                            stack.append((nx, ny))
+
+            # Ostrov musí obsahovať správny počet políčok a číslo
+            return size == required_size and contains_number
+
+        for i in range(self.n):
+            for j in range(self.n):
+                if self.grid[i][j] > 0 and not visited[i][j]:  # Začíname ostrov s číslom
+                    if not dfs(i, j, self.grid[i][j]):
+                        return False
         return True
 
     def dfs(self, grid, row, col):
@@ -68,11 +108,11 @@ class NurikabeSolver:
 
 def print_grid(grid):
     """
-    Funkcia na vykreslenie mriežky do konzoly.
+    Funkcia na vykreslenie mriežky do konzoly, kde hodnota -1 je zobrazená ako 'x'.
     """
     for row in grid:
-        print(" ".join(map(str, row)))
-    print()
+        print(" ".join('x' if cell == -1 else str(cell) for cell in row))
+    print()  # Prázdny riadok po mriežke
 
 
 # Príklad použitia
@@ -102,5 +142,3 @@ if __name__ == "__main__":
             print("Riešenie je validné.")
         else:
             print("Riešenie nie je validné.")
-
-        if idx > 10: break
