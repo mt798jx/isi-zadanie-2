@@ -114,7 +114,7 @@ class NurikabeSolver:
         for i in range(self.n):
             for j in range(self.n):
                 # Začíname ostrov s číslom, ak dané políčko ešte nebolo navštívené
-                if self.grid[i][j] > 0 and not visited[i][j]:
+                if self.grid[i][j] > 0:
                     if not dfs(i, j, self.grid[i][j]):
                         return False
         return True
