@@ -31,7 +31,44 @@ class NurikabeSolver:
                     if not has_black_neighbor:
                         return False
 
-        # 3. Kontrola: Počet bielych políčok je správny
+        # 3. Kontrola: Čierne políčka tvoria súvislú cestu
+        visited = [[False] * self.n for _ in range(self.n)]
+        def dfs_black(x, y):
+            """
+            DFS na kontrolu súvislosti čiernych políčok.
+            """
+            stack = [(x, y)]
+            connected_black_count = 0
+
+            while stack:
+                cx, cy = stack.pop()
+                if visited[cx][cy]:
+                    continue
+                visited[cx][cy] = True
+                connected_black_count += 1
+
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < self.n and 0 <= ny < self.n and not visited[nx][ny]:
+                        if grid[nx][ny] == -1:
+                            stack.append((nx, ny))
+
+            return connected_black_count
+
+        # Nájdeme prvé čierne políčko a skontrolujeme súvislosť
+        black_cells_count = sum(cell == -1 for row in grid for cell in row)
+        for i in range(self.n):
+            for j in range(self.n):
+                if grid[i][j] == -1:
+                    # Spustíme DFS z prvého čierneho políčka
+                    if dfs_black(i, j) != black_cells_count:
+                        return False
+                    break
+            else:
+                continue
+            break
+
+        # 4. Kontrola: Počet bielych políčok je správny
         total_white_cells = sum(cell for row in self.grid for cell in row if cell > 0)
         current_white_cells = sum(cell >= 0 for row in grid for cell in row)
         if current_white_cells != total_white_cells:
