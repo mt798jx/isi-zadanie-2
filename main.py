@@ -80,12 +80,12 @@ class NurikabeSolver:
                 if self.grid[i][j] > 0 and self.grid[i][j] != grid[i][j]:
                     return False
 
-        # 4. Kontrola: Každý ostrov musí byť súvislý a obsahovať správny počet políčok
+        # 5. Kontrola: Každý ostrov musí byť súvislý, obsahovať správny počet políčok a políčka nesmú byť zdieľané
         visited = [[False] * self.n for _ in range(self.n)]
 
         def dfs(x, y, required_size):
             """
-            DFS na kontrolu ostrova.
+            DFS na kontrolu ostrova a kontrolu, že políčka nie sú zdieľané.
             """
             stack = [(x, y)]
             size = 0
@@ -93,25 +93,28 @@ class NurikabeSolver:
 
             while stack:
                 cx, cy = stack.pop()
+                # Ak je políčko už navštívené, znamená to konflikt s iným ostrovom
                 if visited[cx][cy]:
-                    continue
+                    return False
                 visited[cx][cy] = True
                 size += 1
                 if self.grid[cx][cy] > 0:
                     contains_number = True
-                    # Prechádzame susedov
+
+                # Prechádzame susedov
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = cx + dx, cy + dy
                     if 0 <= nx < self.n and 0 <= ny < self.n and not visited[nx][ny]:
                         if grid[nx][ny] >= 0:  # Len biele políčka a čísla
                             stack.append((nx, ny))
 
-            # Ostrov musí obsahovať správny počet políčok a číslo
+            # Ostrov musí obsahovať správny počet políčok a aspoň jedno číslo
             return size == required_size and contains_number
 
         for i in range(self.n):
             for j in range(self.n):
-                if self.grid[i][j] > 0 and not visited[i][j]:  # Začíname ostrov s číslom
+                # Začíname ostrov s číslom, ak dané políčko ešte nebolo navštívené
+                if self.grid[i][j] > 0 and not visited[i][j]:
                     if not dfs(i, j, self.grid[i][j]):
                         return False
         return True
