@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 class NurikabeSolver:
     def __init__(self, grid):
         self.grid = grid  # 5x5 grid (list of lists)
@@ -123,7 +125,7 @@ class NurikabeSolver:
         # Ak sme prešli celú mriežku, overíme, či je riešenie platné
         if col == self.n:
             if self.is_valid(grid):
-                self.solutions.append([row[:] for row in grid])  # Uloženie riešenia
+                self.solutions.append([row[:] for row in grid])
             return
 
         # Prechod na ďalšiu bunku (do hĺbky - prioritne po riadkoch v stĺpci)
@@ -133,7 +135,7 @@ class NurikabeSolver:
         self.dfs([row[:] for row in grid], next_row, next_col)
 
         # Skúšanie ďalšej možnosti, nastaviť hodnotu -1
-        new_grid = [row[:] for row in grid]  # Vytvorenie kópie mriežky
+        new_grid = [row[:] for row in grid]
         new_grid[row][col] = -1
         self.visited_states += 1
         self.dfs(new_grid, next_row, next_col)
@@ -145,6 +147,61 @@ class NurikabeSolver:
         self.dfs([row[:] for row in self.grid], 0, 0)
         return self.solutions
 
+    def is_partial_valid(self, grid):
+        """
+        Rýchla kontrola na čiastočne platný stav mriežky.
+        """
+        # 1. Kontrola: Neexistencia 2x2 čiernych blokov (-1)
+        for i in range(self.n - 1):
+            for j in range(self.n - 1):
+                if (
+                        grid[i][j] == -1 and grid[i + 1][j] == -1 and
+                        grid[i][j + 1] == -1 and grid[i + 1][j + 1] == -1
+                ):
+                    return False
+
+        # 2. Kontrola: Každé číslo v pôvodnej mriežke musí byť stále dostupné
+        for i in range(self.n):
+            for j in range(self.n):
+                if self.grid[i][j] > 0 and grid[i][j] != self.grid[i][j]:
+                    return False
+
+        return True
+
+    def backtrack(self, grid, row, col):
+        """
+        Backtracking na riešenie mriežky.
+        """
+
+        self.visited_states += 1
+
+        # Ak sme prešli celú mriežku, overíme, či je riešenie platné
+        if row == self.n:
+            if self.is_valid(grid):
+                self.solutions.append(deepcopy(grid))
+            return
+
+        # Prechod na ďalšiu bunku (po riadkoch zľava doprava)
+        next_row, next_col = (row, col + 1) if col < self.n - 1 else (row + 1, 0)
+
+        # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
+        if self.grid[row][col] > 0:
+            self.backtrack(deepcopy(grid), next_row, next_col)
+            return
+
+        # Skúšanie prvej možnosti: biela bunka (0)
+        grid[row][col] = 0
+        if self.is_partial_valid(grid):
+            self.backtrack(deepcopy(grid), next_row, next_col)
+
+        # Skúšanie druhej možnosti: čierna bunka (-1)
+        grid[row][col] = -1
+        if self.is_partial_valid(grid):
+            self.backtrack(deepcopy(grid), next_row, next_col)
+
+        # Spätný krok (reset bunky)
+        grid[row][col] = 0
+
 
 def print_grid(grid):
     """
@@ -152,29 +209,45 @@ def print_grid(grid):
     """
     for row in grid:
         print(" ".join('x' if cell == -1 else str(cell) for cell in row))
-    print()  # Prázdny riadok po mriežke
+    print()
 
 
 # Príklad použitia
 if __name__ == "__main__":
     initial_grid = [
-        [0, 0, 3, 0, 0],
-        [0, 3, 0, 0, 0],
+        [2, 0, 0, 0, 1],
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
-        [2, 0, 0, 0, 4],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 6, 0],
     ]
 
     print("Počiatočná mriežka:")
     print_grid(initial_grid)
 
     solver = NurikabeSolver(initial_grid)
-    solutions = solver.solve()
 
-    print(f"Počet navštívených stavov: {solver.visited_states}")
-    print(f"Nájdené riešenia: {len(solutions)}\n")
+    # Vyber metódy
+    while True:
+        method = input("Vyberte metódu riešenia (dfs/backtrack): ").strip().lower()
+        if method in ["dfs", "backtrack"]:
+            break
+        print("Nesprávna voľba. Zadajte 'dfs' alebo 'backtrack'.")
 
-    for idx, solution in enumerate(solutions, 1):
+    if method == "dfs":
+        print("\nDFS riešenie:")
+        solver.visited_states = 0
+        solver.dfs(deepcopy(solver.grid), 0, 0)
+    elif method == "backtrack":
+        print("\nBacktracking riešenie:")
+        solver.visited_states = 0
+        solver.backtrack(deepcopy(solver.grid), 0, 0)
+
+    # Výstup výsledkov
+    print(f"Počet riešení: {len(solver.solutions)}")
+    print(f"Počet navštívených stavov: {solver.visited_states}\n")
+
+    for idx, solution in enumerate(solver.solutions, 1):
         print(f"Riešenie {idx}:")
         print_grid(solution)
 
