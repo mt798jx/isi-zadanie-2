@@ -142,15 +142,15 @@ class NurikabeSolver:
 
     def backtrack(self, grid, row, col):
         """
-        Čistý backtracking na riešenie mriežky bez validácie čiastočných stavov.
+        Čistý backtracking na riešenie mriežky bez deepcopy a validácie čiastočných stavov.
         """
 
         self.visited_states += 1  # Počítadlo navštívených stavov
 
         # Ak sme prešli celú mriežku, overíme, či je riešenie platné
         if row == self.n:
-            if self.is_valid(grid):  # Skontrolujeme, či celé riešenie spĺňa pravidlá
-                self.solutions.append(deepcopy(grid))
+            if self.is_valid(grid):
+                self.solutions.append([row[:] for row in grid])
             return
 
         # Prechod na ďalšiu bunku (po riadkoch zľava doprava)
@@ -158,16 +158,16 @@ class NurikabeSolver:
 
         # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
         if self.grid[row][col] > 0:
-            self.backtrack(deepcopy(grid), next_row, next_col)
+            self.backtrack(grid, next_row, next_col)
             return
 
         # Skúšanie prvej možnosti: biela bunka (0)
         grid[row][col] = 0
-        self.backtrack(deepcopy(grid), next_row, next_col)
+        self.backtrack(grid, next_row, next_col)
 
         # Skúšanie druhej možnosti: čierna bunka (-1)
         grid[row][col] = -1
-        self.backtrack(deepcopy(grid), next_row, next_col)
+        self.backtrack(grid, next_row, next_col)
 
         # Spätný krok (reset bunky)
         grid[row][col] = 0
@@ -179,24 +179,25 @@ class NurikabeSolver:
         self.dfs([row[:] for row in self.grid], 0, 0)
         return self.solutions
 
-    def is_partial_valid(self, grid):
+    def is_partial_valid(self, grid, row, col):
         """
-        Rýchla kontrola na čiastočne platný stav mriežky.
+        Rýchla kontrola na čiastočne platný stav mriežky pre konkrétnu zmenu.
         """
-        # 1. Kontrola: Neexistencia 2x2 čiernych blokov (-1)
-        for i in range(self.n - 1):
-            for j in range(self.n - 1):
+        # 1. Kontrola: Neexistencia 2x2 čiernych blokov (-1) iba okolo bunky [row][col]
+        for i in range(max(0, row - 1), min(self.n - 1, row + 1)):
+            for j in range(max(0, col - 1), min(self.n - 1, col + 1)):
                 if (
                         grid[i][j] == -1 and grid[i + 1][j] == -1 and
                         grid[i][j + 1] == -1 and grid[i + 1][j + 1] == -1
                 ):
                     return False
 
-        # 2. Kontrola: Každé číslo v pôvodnej mriežke musí byť stále dostupné
-        for i in range(self.n):
-            for j in range(self.n):
-                if self.grid[i][j] > 0 and grid[i][j] != self.grid[i][j]:
-                    return False
+        # 2. Kontrola: Pevné hodnoty v pôvodnej mriežke sa nesmú meniť
+        if self.grid[row][col] > 0 and grid[row][col] != self.grid[row][col]:
+            return False
+
+        # 3. Kontrola: (voliteľné) Prepojenie čiernych buniek
+        # Napríklad cez BFS alebo DFS, ale iba v prípade, že je veľká časť mriežky čierna.
 
         return True
 
@@ -216,26 +217,23 @@ class NurikabeSolver:
 
         # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
         if self.grid[row][col] > 0:
-            self.filter(deepcopy(grid), next_row, next_col)
+            self.filter(grid, next_row, next_col)
             return
 
         # Skúšanie prvej možnosti: biela bunka (0)
         grid[row][col] = 0
-        if self.is_partial_valid(grid):
+        if self.is_partial_valid(grid, row, col):
             self.visited_states += 1
-            self.filter(deepcopy(grid), next_row, next_col)
+            self.filter(grid, next_row, next_col)
 
         # Skúšanie druhej možnosti: čierna bunka (-1)
         grid[row][col] = -1
-        if self.is_partial_valid(grid):
+        if self.is_partial_valid(grid, row, col):
             self.visited_states += 1
-            self.filter(deepcopy(grid), next_row, next_col)
+            self.filter(grid, next_row, next_col)
 
         # Spätný krok (reset bunky)
         grid[row][col] = 0
-
-
-
 
 def print_grid(grid):
     """
