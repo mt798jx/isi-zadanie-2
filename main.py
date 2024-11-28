@@ -131,21 +131,20 @@ class NurikabeSolver:
         # Prechod na ďalšiu bunku (do hĺbky - prioritne po riadkoch v stĺpci)
         next_row, next_col = (row + 1, col) if row < self.n - 1 else (0, col + 1)
 
+        self.visited_states += 1
+
         # Skúšanie prvej možnosti, ponechať hodnotu 0
         self.dfs([row[:] for row in grid], next_row, next_col)
 
         # Skúšanie ďalšej možnosti, nastaviť hodnotu -1
         new_grid = [row[:] for row in grid]
         new_grid[row][col] = -1
-        self.visited_states += 1
         self.dfs(new_grid, next_row, next_col)
 
     def backtrack(self, grid, row, col):
         """
         Čistý backtracking na riešenie mriežky bez deepcopy a validácie čiastočných stavov.
         """
-
-        self.visited_states += 1  # Počítadlo navštívených stavov
 
         # Ak sme prešli celú mriežku, overíme, či je riešenie platné
         if row == self.n:
@@ -163,10 +162,12 @@ class NurikabeSolver:
 
         # Skúšanie prvej možnosti: biela bunka (0)
         grid[row][col] = 0
+        self.visited_states += 1
         self.backtrack(grid, next_row, next_col)
 
         # Skúšanie druhej možnosti: čierna bunka (-1)
         grid[row][col] = -1
+        self.visited_states += 1
         self.backtrack(grid, next_row, next_col)
 
         # Spätný krok (reset bunky)
