@@ -229,10 +229,10 @@ if __name__ == "__main__":
 
     # Vyber metódy
     while True:
-        method = input("Vyberte metódu riešenia (dfs/backtrack): ").strip().lower()
-        if method in ["dfs", "backtrack"]:
+        method = input("Vyberte metódu riešenia (dfs/backtrack/filter): ").strip().lower()
+        if method in ["dfs", "backtrack", "filter"]:
             break
-        print("Nesprávna voľba. Zadajte 'dfs' alebo 'backtrack'.")
+        print("Nesprávna voľba. Zadajte 'dfs' alebo 'backtrack' alebo 'filter'.")
 
     if method == "dfs":
         print("\nDFS riešenie:")
@@ -240,6 +240,10 @@ if __name__ == "__main__":
         solver.dfs(deepcopy(solver.grid), 0, 0)
     elif method == "backtrack":
         print("\nBacktracking riešenie:")
+        solver.visited_states = 0
+        solver.backtrack(deepcopy(solver.grid), 0, 0)
+    elif method == "filter":
+        print("\nForward filter riešenie:")
         solver.visited_states = 0
         solver.backtrack(deepcopy(solver.grid), 0, 0)
 
