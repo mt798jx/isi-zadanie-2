@@ -140,6 +140,38 @@ class NurikabeSolver:
         self.visited_states += 1
         self.dfs(new_grid, next_row, next_col)
 
+    def backtrack(self, grid, row, col):
+        """
+        Čistý backtracking na riešenie mriežky bez validácie čiastočných stavov.
+        """
+
+        self.visited_states += 1  # Počítadlo navštívených stavov
+
+        # Ak sme prešli celú mriežku, overíme, či je riešenie platné
+        if row == self.n:
+            if self.is_valid(grid):  # Skontrolujeme, či celé riešenie spĺňa pravidlá
+                self.solutions.append(deepcopy(grid))
+            return
+
+        # Prechod na ďalšiu bunku (po riadkoch zľava doprava)
+        next_row, next_col = (row, col + 1) if col < self.n - 1 else (row + 1, 0)
+
+        # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
+        if self.grid[row][col] > 0:
+            self.backtrack(deepcopy(grid), next_row, next_col)
+            return
+
+        # Skúšanie prvej možnosti: biela bunka (0)
+        grid[row][col] = 0
+        self.backtrack(deepcopy(grid), next_row, next_col)
+
+        # Skúšanie druhej možnosti: čierna bunka (-1)
+        grid[row][col] = -1
+        self.backtrack(deepcopy(grid), next_row, next_col)
+
+        # Spätný krok (reset bunky)
+        grid[row][col] = 0
+
     def solve(self):
         """
         Spustí DFS na vyriešenie hlavolamu.
@@ -168,12 +200,10 @@ class NurikabeSolver:
 
         return True
 
-    def backtrack(self, grid, row, col):
+    def filter(self, grid, row, col):
         """
-        Backtracking na riešenie mriežky.
+        Filter na riešenie mriežky.
         """
-
-        self.visited_states += 1
 
         # Ak sme prešli celú mriežku, overíme, či je riešenie platné
         if row == self.n:
@@ -186,21 +216,25 @@ class NurikabeSolver:
 
         # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
         if self.grid[row][col] > 0:
-            self.backtrack(deepcopy(grid), next_row, next_col)
+            self.filter(deepcopy(grid), next_row, next_col)
             return
 
         # Skúšanie prvej možnosti: biela bunka (0)
         grid[row][col] = 0
         if self.is_partial_valid(grid):
-            self.backtrack(deepcopy(grid), next_row, next_col)
+            self.visited_states += 1
+            self.filter(deepcopy(grid), next_row, next_col)
 
         # Skúšanie druhej možnosti: čierna bunka (-1)
         grid[row][col] = -1
         if self.is_partial_valid(grid):
-            self.backtrack(deepcopy(grid), next_row, next_col)
+            self.visited_states += 1
+            self.filter(deepcopy(grid), next_row, next_col)
 
         # Spätný krok (reset bunky)
         grid[row][col] = 0
+
+
 
 
 def print_grid(grid):
@@ -245,7 +279,7 @@ if __name__ == "__main__":
     elif method == "filter":
         print("\nForward filter riešenie:")
         solver.visited_states = 0
-        solver.backtrack(deepcopy(solver.grid), 0, 0)
+        solver.filter(deepcopy(solver.grid), 0, 0)
 
     # Výstup výsledkov
     print(f"Počet riešení: {len(solver.solutions)}")
