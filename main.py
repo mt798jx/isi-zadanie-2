@@ -26,6 +26,10 @@ class NurikabeSolver:
                     self.islands_size += grid[row][col]
 
     def dfs(self, grid, row, col):
+        """
+        Riešenie pomocou hĺbkového prehľadávania (DFS).
+        """
+        self.refresh_grid_print(grid)
         # Ak sme prešli celú mriežku, overíme, či je riešenie platné
         if col == self.n:
             self.set_undefined_fields_to(grid, 1)
@@ -37,6 +41,8 @@ class NurikabeSolver:
         next_row, next_col = (row + 1, col) if row < self.n - 1 else (0, col + 1)
 
         self.visited_states += 1
+
+        self.refresh_grid_print(grid)
 
         # Skúšanie prvej možnosti, ponechať hodnotu 0
         self.dfs([row[:] for row in grid], next_row, next_col)
@@ -66,6 +72,7 @@ class NurikabeSolver:
         return True
 
     def backtrack(self, grid, row, col):
+        self.refresh_grid_print(grid)
         """
         Čistý backtracking na riešenie mriežky bez deepcopy a validácie čiastočných stavov.
         """
@@ -79,6 +86,7 @@ class NurikabeSolver:
 
         # Prechod na ďalšiu bunku (po riadkoch zľava doprava)
         next_row, next_col = (row, col + 1) if col < self.n - 1 else (row + 1, 0)
+        self.refresh_grid_print(grid)
 
         # Ak je bunka pevne daná (číslo v pôvodnej mriežke), preskočíme ju
         if self.grid[row][col] > 0:
