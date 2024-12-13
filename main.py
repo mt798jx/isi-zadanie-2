@@ -293,6 +293,22 @@ def format_times(end_time, start_time):
     seconds = round(seconds % 60, 3)
     return str(minutes) + " minúty, " + str(seconds) + " sekundy"
 
+def print_initial_grids(grids):
+    print("Dostupné mriežky:")
+    for i, grid in enumerate(grids):
+        print(f"\nMriežka {i + 1}:")
+        print("+---+---+---+---+---+")
+        for row in grid:
+            print("|", end="")
+            for cell in row:
+                if cell == 0:
+                    print("   ", end="|")
+                else:
+                    print(f" {cell:2}", end="|")
+            print()
+        print("+---+---+---+---+---+")
+
+
 # Príklad použitia
 if __name__ == "__main__":
     initial_grids = [
@@ -368,40 +384,62 @@ if __name__ == "__main__":
         ]
     ]
 
-    initial_grid = initial_grids[9]
-
-    solver = NurikabeSolver(initial_grid)
-
-    print("Počiatočná mriežka:")
-    print_grid(initial_grid, solver.islands)
-
-    # Vyber metódy
     while True:
-        method = input("Vyberte metódu riešenia (dfs/backtrack/filter): ").strip().lower()
-        if method in ["dfs", "backtrack", "filter"]:
-            break
-        print("Nesprávna voľba. Zadajte 'dfs' alebo 'backtrack' alebo 'filter'.")
+        print_initial_grids(initial_grids)
 
-    start_time = time.time()
-    if method == "dfs":
-        print("\nDFS riešenie:")
-        solver.visited_states = 0
-        solver.dfs(deepcopy(solver.grid), 0, 0)
-    elif method == "backtrack":
-        print("\nBacktracking riešenie:")
-        solver.visited_states = 0
-        solver.backtrack(deepcopy(solver.grid), 0, 0)
-    elif method == "filter":
-        print("\nForward filter riešenie:")
-        solver.visited_states = 0
-        solver.filter(deepcopy(solver.grid))
-    end_time = time.time()
+        # Výber mriežky
+        while True:
+            try:
+                grid_choice = input("Vyberte číslo mriežky (1-10) alebo zadajte 'koniec' pre ukončenie: ").strip()
+                if grid_choice.lower() == "koniec":
+                    print("Program sa ukončuje.")
+                    exit()
+                grid_choice = int(grid_choice)
+                if 1 <= grid_choice <= len(initial_grids):
+                    break
+                else:
+                    print(f"Zadajte číslo medzi 1 a {len(initial_grids)}.")
+            except ValueError:
+                print("Nesprávny vstup. Zadajte číslo alebo 'koniec'.")
 
-    # Výstup výsledkov
-    print(f"Počet riešení: {len(solver.solutions)}")
-    print(f"Počet navštívených stavov: {solver.visited_states}")
-    print(f"Dĺžka výpočtu: {format_times(end_time, start_time)}\n")
+        initial_grid = initial_grids[grid_choice - 1]
 
-    for idx, solution in enumerate(solver.solutions, 1):
-        print(f"Riešenie {idx}:")
-        print_grid(solution, solver.islands)
+        solver = NurikabeSolver(initial_grid)
+
+        print("Počiatočná mriežka:")
+        print_grid(initial_grid, solver.islands)
+
+        # Vyber metódy
+        while True:
+            method = input(
+                "Vyberte metódu riešenia (dfs/backtrack/filter) alebo 'koniec' pre ukončenie: ").strip().lower()
+            if method == "koniec":
+                print("Program sa ukončuje.")
+                exit()
+            if method in ["dfs", "backtrack", "filter"]:
+                break
+            print("Nesprávna voľba. Zadajte 'dfs', 'backtrack', 'filter' alebo 'koniec'.")
+
+        start_time = time.time()
+        if method == "dfs":
+            print("\nDFS riešenie:")
+            solver.visited_states = 0
+            solver.dfs(deepcopy(solver.grid), 0, 0)
+        elif method == "backtrack":
+            print("\nBacktracking riešenie:")
+            solver.visited_states = 0
+            solver.backtrack(deepcopy(solver.grid), 0, 0)
+        elif method == "filter":
+            print("\nForward filter riešenie:")
+            solver.visited_states = 0
+            solver.filter(deepcopy(solver.grid))
+        end_time = time.time()
+
+        # Výstup výsledkov
+        print(f"Počet riešení: {len(solver.solutions)}")
+        print(f"Počet navštívených stavov: {solver.visited_states}")
+        print(f"Dĺžka výpočtu: {format_times(end_time, start_time)}\n")
+
+        for idx, solution in enumerate(solver.solutions, 1):
+            print(f"Riešenie {idx}:")
+            print_grid(solution, solver.islands)
